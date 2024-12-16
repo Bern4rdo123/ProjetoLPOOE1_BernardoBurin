@@ -24,7 +24,7 @@ public class Quarto {
     @Column(nullable = false, length = 50)
     private String tipo;
     
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = true, precision = 10, scale = 2)
     private Double preco;
     
     @Column(nullable = false)

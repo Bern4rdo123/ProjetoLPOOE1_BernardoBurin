@@ -16,6 +16,7 @@ import java.util.List;
 public class TelaQuartos extends javax.swing.JFrame {
 
     JPAPersistence repository = new JPAPersistence();
+    int linha_selecionada =-1;
 
     /**
      * Creates new form TelaQuartos
@@ -30,10 +31,12 @@ public class TelaQuartos extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.setRowCount(0); // Limpa os dados existentes na tabela
 
+        repository.openConnection();
         List<Quarto> quartos = repository.findAll();
 
         for (Quarto quarto : quartos) {
             Object[] linha = {
+                quarto.getId(),
                 quarto.getNumero(),
                 quarto.getTipo(),
                 quarto.getPreco(),
@@ -58,6 +61,7 @@ public class TelaQuartos extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jButton3 = new javax.swing.JButton();
+        jButton4 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -80,29 +84,41 @@ public class TelaQuartos extends javax.swing.JFrame {
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
             },
             new String [] {
-                "Nome", "Tipo", "Preço", "Disponibilidade"
+                "ID", "Nome", "Tipo", "Preço", "Disponibilidade"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Boolean.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Boolean.class
             };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
         });
+        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable1MouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(jTable1);
 
-        jButton3.setText("Atualizar");
+        jButton3.setText("Editar");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
+            }
+        });
+
+        jButton4.setText("Atualiza");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
             }
         });
 
@@ -112,23 +128,27 @@ public class TelaQuartos extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton4)
+                .addGap(17, 17, 17))
             .addGroup(layout.createSequentialGroup()
                 .addGap(21, 21, 21)
                 .addComponent(jButton1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jButton3)
-                .addGap(44, 44, 44)
+                .addGap(59, 59, 59)
                 .addComponent(jButton2)
-                .addGap(48, 48, 48))
+                .addGap(33, 33, 33))
             .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
@@ -151,14 +171,47 @@ public class TelaQuartos extends javax.swing.JFrame {
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
+        
+        Integer editaquartoid = (Integer) jTable1.getValueAt(linha_selecionada, 0);
+        Integer editaquartonumero = (Integer) jTable1.getValueAt(linha_selecionada, 1);
+        String editaquartotipo =  (String) jTable1.getValueAt(linha_selecionada, 2);
+        Double editaquartopreco = (Double) jTable1.getValueAt(linha_selecionada, 3);
+        Boolean editaquartodispo = (Boolean) jTable1.getValueAt(linha_selecionada, 4);
+        
+        
+        EditaQuarto editaquarto = new EditaQuarto(editaquartoid, editaquartonumero, editaquartodispo, editaquartopreco, editaquartotipo);
+        editaquarto.setVisible(true);
         CarregaQuartos();
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
-        TelaRemoveQuarto telaremovequarto = new TelaRemoveQuarto();
-        telaremovequarto.setVisible(true);
+        
+        if(linha_selecionada==-1){
+            return;
+        }
+        
+        Quarto toremove = new Quarto();
+        
+        toremove.setId((Integer) jTable1.getValueAt(linha_selecionada, 0));
+        
+        repository.openConnection();
+        repository.remove(toremove);
+        
+        repository.closeConnection();
+        CarregaQuartos();
+      
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+        // TODO add your handling code here:
+        linha_selecionada = jTable1.getSelectedRow();
+    }//GEN-LAST:event_jTable1MouseClicked
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        // TODO add your handling code here:
+        CarregaQuartos();
+    }//GEN-LAST:event_jButton4ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -199,6 +252,7 @@ public class TelaQuartos extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
